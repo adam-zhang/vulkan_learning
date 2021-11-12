@@ -15,7 +15,7 @@ const bool enableValidationLayers = false;
 const bool enableValidationLayers = true;
 #endif
 
-VkResult CreateDebugUtilsMessagerEXT(VkInstance instance, const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkDebugUtilsMessengerEXT* pDebugMessenger)
+VkResult CreateDebugUtilsMessengerEXT(VkInstance instance, const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkDebugUtilsMessengerEXT* pDebugMessenger)
 {
 	auto func = (PFN_vkCreateDebugUtilsMessengerEXT) vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT");
 	if (func != nullptr)
@@ -25,7 +25,7 @@ VkResult CreateDebugUtilsMessagerEXT(VkInstance instance, const VkDebugUtilsMess
 }
 
 void DestroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerEXT debugMessenger, const VkAllocationCallbacks* pAllocator)
-{
+{ 
 	auto func = (PFN_vkDestroyDebugUtilsMessengerEXT) vkGetInstanceProcAddr(instance, "vkDestroyDebugUtilsMessagerEXT");
 	if (func != nullptr)
 		func(instance, debugMessenger, pAllocator);
@@ -54,6 +54,32 @@ class Application
 		void initVulkan()
 		{
 			createInstance();
+			setupDebugMessager();
+		}
+		void populateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInfo)
+		{
+			//createInfo = {};
+			//createInfo.sType = VK_STRUCTURE_TYPE_DEBUG_MESSENGER_CREATE_INFO_EXT;
+			//createInfo.messageSeverity = VK_DEBUG_MESSAGE_TYPE_GENERAL_BIT_EXT|VK_DEBUG_MESSAGE_TYPE_VALIDATION_BIT_EXT|VK_DEBUG_MESSAGE_TYPE_PERFORMENCE_BIT_EXT;
+			//createInfo.pfnUserCallback = debugCallback;
+		}
+		static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity, 
+				VkDebugUtilsMessageTypeFlagsEXT messageType,
+				const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
+				void* pUserData)
+		{
+			std::cerr << "validation layer:" << pCallbackData->pMessage << std::endl;
+			return VK_FALSE;
+		}
+
+		void setupDebugMessager()
+		{
+			if (!enableValidationLayers)
+				return;
+			VkDebugUtilsMessengerCreateInfoEXT createInfo;
+			populateDebugMessengerCreateInfo(createInfo);
+			if (CreateDebugUtilsMessengerEXT(instance_, &createInfo, nullptr, &debugMessenger) != VK_SUCCESS)
+				throw std::runtime_error("faild to set up debug messenger");
 		}
 		
 		void mainLoop()
@@ -98,6 +124,7 @@ class Application
 		const uint32_t HEIGHT = 600;
 		GLFWwindow* window_ = 0;
 		VkInstance instance_ = 0;
+		VkDebugUtilsMessengerEXT debugMessenger = 0;
 };
 
 int main(int argc, char** argv)
